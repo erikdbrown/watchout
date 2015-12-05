@@ -6,6 +6,7 @@ var gameOptions = {
 };
 
 var gameStats = {
+  collisions: 0,
   current: 100,
   highscore: 300
 };
@@ -89,6 +90,8 @@ var startingPoints = obstacleRange.map(function(d) { return { x: d.x, y: d.y }})
     
     var range = d3.range(obstacleRange.length).map(function(d) { return { x: Math.random() * gameOptions.width, y: Math.random() * gameOptions.height } });
 
+    var collisions = {}
+
     svg.selectAll('.obstacle')
             .data(range)
             .transition()
@@ -97,6 +100,7 @@ var startingPoints = obstacleRange.map(function(d) { return { x: d.x, y: d.y }})
             .tween('text', function (d) {
               var X = d3.interpolate(this.cx.animVal.value, d.x);
               var Y = d3.interpolate(this.cy.animVal.value, d.y);
+              var id = this.id;
 
               return function (t) {
                 var playerX = svg.selectAll('#player').attr('cx');
@@ -108,7 +112,12 @@ var startingPoints = obstacleRange.map(function(d) { return { x: d.x, y: d.y }})
 
 
                 if (c <= svg.selectAll('#player').attr('r')) {
-                  console.log('you\'re hit');
+                  if (!collisions[id]) {
+                    collisions[id] = true;
+                    gameStats.collisions++;
+                    d3.selectAll('.collisions').select('span').text(gameStats.collisions);
+                    console.log('you are hit!');
+                  }
                 }
 
               }
