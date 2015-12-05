@@ -10,19 +10,23 @@ var gameStats = {
   highscore: 300
 };
 
-var Player = function (n) {
+var Obstacle = function () {
 
   this.fill = '#ff6600';
   this.r = 10;
   this.x = Math.random() * gameOptions.width;
   this.y = Math.random() * gameOptions.height;
-  this.id = n || 0;
-  this.m = 'M' + this.x + ', ' + this.y
-  this.l = 'L' + (Math.random() * gameOptions.width) + ', ' + (Math.random() * gameOptions.height)
 
+};
+
+var Player = function() {this.fill = '#ff6600';
+  this.fill = 'purple';
+  this.r = 10;
+  this.x = gameOptions.width / 2;
+  this.y = gameOptions.height / 2;  
 }
 
-var players = [new Player('hi'), new Player(), new Player()];
+var obstacleRange = d3.range(50).map(function(item) { return new Obstacle() });
 
 var svg = d3.select('.board').append('svg')
             .attr('height', gameOptions.height)
@@ -30,36 +34,51 @@ var svg = d3.select('.board').append('svg')
             .style('padding', 30)
             .style('background-color', '#003366')
 
+var dragmove = function(d) {
+  console.log('hello')
+  d3.select('#player')
+    .attr("cx", d3.event.x)
+    .attr("cy", d3.event.y);
+}
+
+var drag = d3.behavior.drag()
+             .on('drag', dragmove)
+
+var player = svg.selectAll('circle')
+                .data([new Player()])
+                .enter()
+                .append('circle')
+                .attr('cx', function(d) { return d.x })
+                .attr('cy', function(d) { return d.y })
+                .attr('r', function(d) { return d.r })
+                .attr('id', 'player')
+                .attr('class', 'draggableCircle')
+                .style('fill', function(d) { return d.fill })
+                .call(drag);
 
 var currentScore = d3.select('.current').selectAll('span')
-                    .text(gameStats.current);
+                     .text(gameStats.current);
 
-// remember to compare this to previous high score before updating.
-// have to store previous high scores somewhere
 var highScore = d3.select('.highscore').selectAll('span')
                   .text(gameStats.highscore);
 
-var circles = svg.selectAll('circle')
-               .data(players)
-               .enter()
-               .append('circle');
-
-var playerStyles = circles
+var obstacles = svg.selectAll('circle')
+                   .data(obstacleRange)
+                   .enter()
+                   .append('circle')
                    .attr('cx', function(d) { return d.x })
                    .attr('cy', function(d) { return d.y })
                    .attr('r', function(d) { return d.r })
-                   .attr('id', function(d) { return d.id })
-                   .style('fill', function(d) { return d.fill }); 
+                   .style('fill', function(d) { return d.fill });   
 
 setInterval(function() {
-  var range = d3.range(players.length).map(function(d) { return { x: Math.random() * gameOptions.width, y: Math.random() * gameOptions.height } });
-  var x = circles
+  var range = d3.range(obstacleRange.length).map(function(d) { return { x: Math.random() * gameOptions.width, y: Math.random() * gameOptions.height } });
+  
+  var x = obstacles
             .data(range)
             .transition()
             .duration(1000)
             .attr('cx', function(d) { return d.x })
             .attr('cy', function(d) { return d.y })
-            // .transition(3000)
 
-}, 1000)
-
+}, 2000)
