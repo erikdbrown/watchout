@@ -31,13 +31,13 @@ var Player = function() {
 }
 
 var obstacleRange = d3.range(gameOptions.nEnemies).map(function(item, index) { return new Obstacle(index) });
-obstacleRange.unshift(new Player());
+// obstacleRange.unshift(new Player());
 
 var svg = d3.select('.board').append('svg')
             .attr('height', gameOptions.height)
             .attr('width', gameOptions.width)
             .style('padding', 30)
-            .style('background-color', '#003366')
+            .style('background-color', '#003366');
 
 var dragmove = function(d) {
   d3.select('#player')
@@ -46,7 +46,7 @@ var dragmove = function(d) {
 }
 
 var drag = d3.behavior.drag()
-             .on('drag', dragmove)
+             .on('drag', dragmove);
 
 var currentScore = d3.select('.current').selectAll('span')
                      .text(gameStats.current);
@@ -55,28 +55,34 @@ var highScore = d3.select('.highscore').selectAll('span')
                   .text(gameStats.highscore);
 
 // create all circles
-svg.selectAll('circle')
+svg.selectAll('image')
    .data(obstacleRange)
    .enter()
+   .append('image')
+   .attr('width', 20)
+   .attr('height', 20)
+   .attr('x', function(d) { return d.x })
+   .attr('y', function(d) { return d.y })
+   .attr("xlink:href","shuriken.png")
+   .attr('class', 'obstacle');
+
+// make one of the circles our player
+var player = svg.selectAll('circle')
+   .data([new Player()])
+   .enter()
    .append('circle')
-   .attr('class', 'obstacle')
    .attr('cx', function(d) { return d.x })
    .attr('cy', function(d) { return d.y })
    .attr('r', function(d) { return d.r })
    .attr('id', function(d) { return d.index })
+   .attr('class', 'draggableCircle')
    .style('fill', function(d) { return d.fill })
-
-// make one of the circles our player
-var player = svg.selectAll('circle')
-                .data([new Player()]) 
-                .attr('class', 'draggableCircle')
-                .call(drag)
-                .exit();
+   .call(drag);
 
 var scoreCounter = function() {
   gameStats.current++;
   d3.selectAll('.current').select('span').text(gameStats.current);
-}
+};
 
 var timerID = setInterval(scoreCounter, 150);
 
@@ -94,8 +100,8 @@ setInterval(function() {
        .duration(1000)
        .tween('text', function (d) {
 
-         var X = d3.interpolate(this.cx.animVal.value, d.x);
-         var Y = d3.interpolate(this.cy.animVal.value, d.y);
+         var X = d3.interpolate(this.x.animVal.value, d.x);
+         var Y = d3.interpolate(this.y.animVal.value, d.y);
          var id = this.id;
          var score = 0;
 
@@ -126,6 +132,6 @@ setInterval(function() {
            }
          }
        })
-       .attr('cx', function(d) { return d.x })
-       .attr('cy', function(d) { return d.y })
+       .attr('x', function(d) { return d.x })
+       .attr('y', function(d) { return d.y })
 }, 1500)

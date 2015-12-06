@@ -1,5 +1,11 @@
-/* your beautiful css styling goes here! */
+ .obstacle {
+  animation: spin 4s infinite linear;
+  transform-origin: 50% 50% 0;
 
-/* Note: an asteroid image is included in this repo.
-Feel free to use it if you like. */
+}
+
+@keyframes spin {
+  to {transform: rotate(0deg);}
+  from {transform: rotate(360deg);}
+}
 
