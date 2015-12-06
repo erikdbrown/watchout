@@ -7,8 +7,8 @@ var gameOptions = {
 
 var gameStats = {
   collisions: 0,
-  current: 100,
-  highscore: 300
+  current: 0,
+  highscore: 30
 };
 
 var Obstacle = function (index) {
@@ -21,9 +21,6 @@ var Obstacle = function (index) {
 
 };
 
-// Obstacle method that constantly reports it's location and compares it to the player location
-// add call(thisMethod) to obstacle creation
-
 var Player = function() {
 
   this.index = 'player';
@@ -33,7 +30,7 @@ var Player = function() {
   this.y = gameOptions.height / 2;  
 }
 
-var obstacleRange = d3.range(3).map(function(item, index) { return new Obstacle(index) });
+var obstacleRange = d3.range(gameOptions.nEnemies).map(function(item, index) { return new Obstacle(index) });
 obstacleRange.unshift(new Player());
 
 var svg = d3.select('.board').append('svg')
@@ -76,54 +73,59 @@ var player = svg.selectAll('circle')
                 .call(drag)
                 .exit();
 
-// var x = setInterval(function() {
+var scoreCounter = function() {
+  gameStats.current++;
+  d3.selectAll('.current').select('span').text(gameStats.current);
+}
 
-  //iterate and find the original positions
- 
-  // var originalPositions = [];
-  // for (var i = 1; i < obstacleRange.length; i++) {
-  //   originalPositions.push({x: obstacleRange.attr('cx'), y: obstacleRange.attr('cy')})
-  // } 
-var startingPoints = obstacleRange.map(function(d) { return { x: d.x, y: d.y }});
-  
-  setInterval(function() {
+var timerID = setInterval(scoreCounter, 150);
+
+
+setInterval(function() {
     
     var range = d3.range(obstacleRange.length).map(function(d) { return { x: Math.random() * gameOptions.width, y: Math.random() * gameOptions.height } });
 
     var collisions = {}
 
     svg.selectAll('.obstacle')
-            .data(range)
-            .transition()
-            .ease('eleastic')
-            .duration(1000)
-            .tween('text', function (d) {
-              var X = d3.interpolate(this.cx.animVal.value, d.x);
-              var Y = d3.interpolate(this.cy.animVal.value, d.y);
-              var id = this.id;
+       .data(range)
+       .transition()
+       // .ease('eleastic')
+       .duration(1000)
+       .tween('text', function (d) {
 
-              return function (t) {
-                var playerX = svg.selectAll('#player').attr('cx');
-                var playerY = svg.selectAll('#player').attr('cy');
+         var X = d3.interpolate(this.cx.animVal.value, d.x);
+         var Y = d3.interpolate(this.cy.animVal.value, d.y);
+         var id = this.id;
+         var score = 0;
 
-                var a = playerX - X(t);
-                var b = playerY - Y(t);
-                var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
-
-
-                if (c <= svg.selectAll('#player').attr('r')) {
-                  if (!collisions[id]) {
-                    collisions[id] = true;
-                    gameStats.collisions++;
-                    d3.selectAll('.collisions').select('span').text(gameStats.collisions);
-                    console.log('you are hit!');
-                  }
-                }
-
-              }
-            })
-            // .call(movePosition, Math.random() * gameOptions.width, Math.random() * gameOptions.height)
-            .attr('cx', function(d) { return d.x })
-            .attr('cy', function(d) { return d.y })
-
-}, 1000)
+         return function (t) {
+           var playerX = svg.selectAll('#player').attr('cx');
+           var playerY = svg.selectAll('#player').attr('cy');
+           var a = playerX - X(t);
+           var b = playerY - Y(t);
+           var c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+           if (c <= svg.selectAll('#player').attr('r')) {
+             //preventing pass through collisions
+             if (!collisions[id]) {
+               collisions[id] = true;
+               //increment collisions
+               gameStats.collisions++;
+               //update our collision prop in gameStats
+               d3.selectAll('.collisions').select('span').text(gameStats.collisions);
+             }
+             //comparing current score to high score - reset high score if need be
+             d3.selectAll('.highscore').select('span').text(gameStats.highscore > gameStats.current ? gameStats.highscore : gameStats.current);
+             //clearing our interval counter on collision
+             clearInterval(timerID);
+             //resetting our current score in gameStats to zero
+             gameStats.current = 0;
+             d3.selectAll('.current').select('span').text(0);
+             //reset our score counter
+             timerID = setInterval(scoreCounter, 150);
+           }
+         }
+       })
+       .attr('cx', function(d) { return d.x })
+       .attr('cy', function(d) { return d.y })
+}, 1500)
